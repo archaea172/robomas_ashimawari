@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,6 +36,8 @@
 #define L_F 3
 #define R_B 1
 #define L_B 2
+
+#define PI 3.141
 
 /* USER CODE END PD */
 
@@ -52,6 +55,12 @@ TIM_HandleTypeDef htim7;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+const float a0 = PI/180*45;
+const float a1 = PI/180*135;
+const float a2 = PI/180*225;
+const float a3 = PI/180*315;
+const float r = 0.03;
+const float R = 0.20;
 
 typedef struct{
 	uint16_t CANID;
@@ -74,7 +83,7 @@ uint8_t TxData[8] = {};
 uint8_t RxData[8] = {};
 uint32_t TxMailbox;
 
-volatile int16_t purpose = -64;
+volatile int16_t purpose = 64;
 motor robomas[4] = {
 		{0x201, 1, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0x202, 2, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -209,6 +218,24 @@ void FDCAN_TxSettings(void) {
 	  }
 }
 
+void omni_calc(float theta,float vx,float vy,float omega,float *w0,float *w1,float *w2,float *w3){
+
+	float v[3] = {vx, vy, omega};
+	float sint = sin(theta);
+	float cost = cos(theta);
+
+	float arr[4][3] =
+	{{-cos(a0)*sint-sin(a0)*cost, cos(a0)*cost-sin(a0)*sint, R},
+	{-cos(a1)*sint-sin(a1)*cost, cos(a1)*cost-sin(a1)*sint, R},
+	{-cos(a2)*sint-sin(a2)*cost, cos(a2)*cost-sin(a2)*sint, R},
+	{-cos(a3)*sint-sin(a3)*cost, cos(a3)*cost-sin(a3)*sint, R}};
+
+	*w0 = (arr[0][0] * v[0] + arr[0][1] * v[1] + arr[0][2] * v[2]) / r;
+	*w1 = (arr[1][0] * v[0] + arr[1][1] * v[1] + arr[1][2] * v[2]) / r;
+	*w2 = (arr[2][0] * v[0] + arr[2][1] * v[1] + arr[2][2] * v[2]) / r;
+	*w3 = (arr[3][0] * v[0] + arr[3][1] * v[1] + arr[3][2] * v[2]) / r;
+}
+
 int _write(int file, char *ptr, int len)
 {
     HAL_UART_Transmit(&huart2,(uint8_t *)ptr,len,10);
@@ -261,15 +288,16 @@ int main(void)
 
 
   robomas[0].trgVel = (int)(-purpose * 36);
-  robomas[1].trgVel = (int)(purpose * 36 * 2);
-  robomas[2].trgVel =  (int)(purpose * 36);
-  robomas[3].trgVel = (int)(-purpose * 36);
+  robomas[1].trgVel = (int)(purpose * 36);
+  robomas[2].trgVel =  (int)(-purpose * 36);
+  robomas[3].trgVel = (int)(purpose * 36);
 
 
 
 
   TxHeader.Identifier = 0x200;
   HAL_TIM_Base_Start_IT(&htim6);
+  HAL_TIM_Base_Start_IT(&htim7);
 
   /* USER CODE END 2 */
 
