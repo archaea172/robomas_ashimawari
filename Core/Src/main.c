@@ -27,7 +27,18 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef struct{
+	uint16_t CANID;
+	uint8_t motorID;
+	int16_t trgVel;
+	volatile int16_t actVel;
+	volatile int16_t p_actVel;
+	volatile int16_t cu;
+	double angle;
+	int16_t actCurrent;
+	float hensa;
+	float ind;
+}motor;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -62,18 +73,7 @@ const float a3 = PI/180*315;
 const float r = 0.03;
 const float R = 0.20;
 
-typedef struct{
-	uint16_t CANID;
-	uint8_t motorID;
-	int16_t trgVel;
-	volatile int16_t actVel;
-	volatile int16_t p_actVel;
-	volatile int16_t cu;
-	double angle;
-	int16_t actCurrent;
-	float hensa;
-	float ind;
-}motor;
+
 
 FDCAN_TxHeaderTypeDef TxHeader;
 FDCAN_RxHeaderTypeDef RxHeader;
@@ -175,7 +175,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 }
 
-void FDCAN_RxSettings(void){
+void FDCAN_RxTxSettings(void) {
 	FDCAN_FilterTypeDef FDCAN_Filter_settings;
 	FDCAN_Filter_settings.IdType = FDCAN_STANDARD_ID;
 	FDCAN_Filter_settings.FilterIndex = 0;
@@ -183,6 +183,16 @@ void FDCAN_RxSettings(void){
 	FDCAN_Filter_settings.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 	FDCAN_Filter_settings.FilterID1 = 0x200;
 	FDCAN_Filter_settings.FilterID2 = 0x210;
+
+	TxHeader.Identifier = 0x200;
+	TxHeader.IdType = FDCAN_STANDARD_ID;
+	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
+	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
+	TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	TxHeader.MessageMarker = 0;
 
 	if (HAL_FDCAN_ConfigFilter(&hfdcan3, &FDCAN_Filter_settings) != HAL_OK){
 		printf("fdcan_configfilter is error\r\n");
@@ -194,28 +204,15 @@ void FDCAN_RxSettings(void){
 		Error_Handler();
 	}
 
-
+	if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
+		printf("fdcan_start is error\r\n");
+		Error_Handler();
+	}
 
 	if (HAL_FDCAN_ActivateNotification(&hfdcan3, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK){
 		printf("fdcan_activatenotification is error\r\n");
 		Error_Handler();
 	}
-}
-
-void FDCAN_TxSettings(void) {
-	  TxHeader.Identifier = 0x000;
-	  TxHeader.IdType = FDCAN_STANDARD_ID;
-	  TxHeader.TxFrameType = FDCAN_DATA_FRAME;
-	  TxHeader.DataLength = FDCAN_DLC_BYTES_8;
-	  TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	  TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
-	  TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
-	  TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-	  TxHeader.MessageMarker = 0;
-	  if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
-		  printf("fdcan_start is error\r\n");
-		  Error_Handler();
-	  }
 }
 
 void omni_calc(float theta,float vx,float vy,float omega,float *w0,float *w1,float *w2,float *w3){
@@ -280,8 +277,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("start\r\n");
 
-  FDCAN_RxSettings();
-  FDCAN_TxSettings();
+  FDCAN_RxTxSettings();
 
   printf("can_start\r\n");
 
@@ -294,10 +290,8 @@ int main(void)
 
 
 
-
-  TxHeader.Identifier = 0x200;
   HAL_TIM_Base_Start_IT(&htim6);
-  HAL_TIM_Base_Start_IT(&htim7);
+//  HAL_TIM_Base_Start_IT(&htim7);
 
   /* USER CODE END 2 */
 
