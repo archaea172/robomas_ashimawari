@@ -375,8 +375,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  vx = vel_x*0.1;
-	  vy = vel_y*0.1;
+	  vx = vel_x*0.01;
+	  vy = vel_y*0.01;
 	  omni_calc(0 ,vx, vy, omega, &w[R_F-1], &w[L_F-1], &w[L_B-1], &w[R_B-1]);
 	  robomas[R_F-1].trgVel = (int)(-1*w[R_F-1]*36*60/(2*PI));
 	  robomas[R_B-1].trgVel = (int)(-1*w[R_B-1]*36*60/(2*PI));
