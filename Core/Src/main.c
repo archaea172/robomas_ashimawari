@@ -198,6 +198,12 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
 			vel_y = (int8_t)RxData[1];
 
 		}
+		if (RxHeader.Identifier == 0x301) {
+			if ((int8_t)RxData[1] == 1) {
+				vel_x = 0;
+				vel_y = 0;
+			}
+		}
 
 	}
 }
@@ -375,6 +381,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if (vel_x < 10 && vel_x > -10){
+		  vel_x = 0;
+	  }
+	  if (vel_y < 10 && vel_y > -10){
+		  vel_y = 0;
+	  }
 	  vx = vel_x*0.01;
 	  vy = vel_y*0.01;
 	  omni_calc(0 ,vx, vy, omega, &w[R_F-1], &w[L_F-1], &w[L_B-1], &w[R_B-1]);
