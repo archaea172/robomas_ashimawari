@@ -381,6 +381,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  /*
 	  if (vel_x < 10 && vel_x > -10){
 		  vel_x = 0;
 	  }
@@ -390,10 +391,13 @@ int main(void)
 	  vx = vel_x*0.01;
 	  vy = vel_y*0.01;
 	  omni_calc(0 ,vx, vy, omega, &w[R_F-1], &w[L_F-1], &w[L_B-1], &w[R_B-1]);
-	  robomas[R_F-1].trgVel = (int)(-1*w[R_F-1]*36*60/(2*PI));
-	  robomas[R_B-1].trgVel = (int)(-1*w[R_B-1]*36*60/(2*PI));
-	  robomas[L_F-1].trgVel =  (int)(-1*w[L_F-1]*36*60/(2*PI));
-	  robomas[L_B-1].trgVel = (int)(-1*w[L_B-1]*36*60/(2*PI));
+	  robomas[R_F-1].trgVel = -36*30;
+	  robomas[R_B-1].trgVel = -36*30;
+	  robomas[L_F-1].trgVel = 36*30;
+	  robomas[L_B-1].trgVel = 36*30;*/
+	  robomas[0].trgVel = 36*60;
+	  robomas[1].trgVel = -36*90;
+	  robomas[2].trgVel = -36*90;
 
 	  printf("act:%d,(%d,%d)\r\n", robomas[0].actVel, vel_x, vel_y);
 	  HAL_Delay(1);
